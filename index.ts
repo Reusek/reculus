@@ -1,38 +1,29 @@
-import { map, filter, int, $, effect, pipe, from, Int, Behavior } from "./src";
+import { $, dispose, effect, number, subscribe, value } from "./src";
 
-const doubleMap = map<Int, Int>((v) => v * 2);
+const _count = number<"count">();
+const $count = value(_count);
 
-const divisibleByThreeFilter = filter<Int>(
-	(v) => v % 3 === 0
-);
+const count = $count(0);
 
-const extractFirstItemMap = map<Int[], Int>(
-	([value]) => value
-);
+const doubleCount = $count(0, () => {
+	const c = $(count);
 
-const doubleDivisibleByThreePipe = pipe<[Int], [Int, Int, Int]>(
-	extractFirstItemMap,
-	doubleMap,
-	divisibleByThreeFilter
-);
-
-const doubleFrom = ($behavior: Behavior<any, Int>) => {
-	return from<[Int], Int>(
-		[$behavior],
-		doubleDivisibleByThreePipe	
-	);
-};
-
-const count = int(0);
-const double = int(0, doubleFrom(count));
+	return c === undefined
+		? undefined
+		: c * 2;
+});
 
 effect(() => {
-	console.log({
-		double1: $(double),
-		double2: $(double),
-	});
+	console.log($(doubleCount));
+});
+
+subscribe(count, "dispose", () => {
+	console.log("Count has been disposed");
 });
 
 $(count, 1);
 $(count, 2);
+
+dispose(count);
+
 $(count, 3);
